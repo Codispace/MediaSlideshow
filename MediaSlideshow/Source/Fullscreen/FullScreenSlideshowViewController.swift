@@ -39,7 +39,7 @@ open class FullScreenSlideshowViewController: UIViewController {
     }
 
     /// Background color
-    open var backgroundColor = UIColor.black
+    open var backgroundColor = UIColor.white
 
     /// Enables/disable zoom
     open var zoomEnabled = true {
@@ -69,7 +69,12 @@ open class FullScreenSlideshowViewController: UIViewController {
         view.addSubview(slideshow)
 
         // close button configuration
-        closeButton.setImage(UIImage(named: "ic_cross_white", in: .module, compatibleWith: nil), for: UIControlState())
+        if #available(iOS 13.0, *) {
+            closeButton.setImage(UIImage(systemName: "xmark"), for: UIControlState())
+            closeButton.tintColor = .black
+        } else {
+            // Fallback on earlier versions
+        }
         closeButton.addTarget(self, action: #selector(FullScreenSlideshowViewController.close), for: UIControlEvents.touchUpInside)
         view.addSubview(closeButton)
     }

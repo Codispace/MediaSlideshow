@@ -29,7 +29,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
 
         slideshow.pageIndicatorPosition = .init(horizontal: .center, vertical: .under)
-        slideshow.contentScaleMode = UIViewContentMode.scaleAspectFill
+        slideshow.contentScaleMode = UIViewContentMode.scaleAspectFit
 
         slideshow.pageIndicator = UIPageControl.withSlideshowColors()
 
