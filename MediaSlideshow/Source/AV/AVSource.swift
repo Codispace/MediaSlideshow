@@ -37,6 +37,7 @@ open class AVSource: NSObject, MediaSource {
     open func slide(in slideshow: MediaSlideshow) -> MediaSlideshowSlide {
         let playerController = AVPlayerViewController()
         playerController.player = player
+        playerController.player?.isMuted = true
         playerController.showsPlaybackControls = onAppear == .paused || slideshow.zoomEnabled
         var playView: AVSlidePlayingOverlayView?
         var pauseView: AVSlidePausedOverlayView?
@@ -65,21 +66,21 @@ open class AVSource: NSObject, MediaSource {
 }
 
 extension AVSource: AVPlayerSlideDelegate {
-    open func slideDidAppear(_ slide: AVPlayerSlide) {
+    public func slideDidAppear(_ slide: AVPlayerSlide) {
         switch onAppear {
         case .play:
             player.play()
-            player.isMuted = !slide.playerController.showsPlaybackControls
+            player.isMuted = true
         case .paused:
             player.pause()
         }
     }
 
-    open func slideDidDisappear(_ slide: AVPlayerSlide) {
+    public func slideDidDisappear(_ slide: AVPlayerSlide) {
         player.pause()
     }
 
-    open func currentThumbnail(_ slide: AVPlayerSlide) -> UIImage? {
+    public func currentThumbnail(_ slide: AVPlayerSlide) -> UIImage? {
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
         if let imageRef = try? generator.copyCGImage(at: player.currentTime(), actualTime: nil) {
