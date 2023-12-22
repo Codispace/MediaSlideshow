@@ -22,6 +22,8 @@ open class StandardAVSlideOverlayView: UIView, AVSlideOverlayView {
     private let activityView: ActivityIndicatorView?
     private var playerTimeControlStatusObservation: NSKeyValueObservation?
     private var playerTimeObserver: Any?
+    
+   
 
     public init(
         item: AVPlayerItem,
@@ -85,6 +87,8 @@ open class StandardAVSlideOverlayView: UIView, AVSlideOverlayView {
 }
 
 public class AVSlidePlayingOverlayView: UIView, AVSlideOverlayView {
+    
+    public var isShowCountdown = false
 
     private let countdownLabel: UILabel = {
         var label = UILabel()
@@ -108,12 +112,14 @@ public class AVSlidePlayingOverlayView: UIView, AVSlideOverlayView {
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        countdownLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(countdownLabel)
-        NSLayoutConstraint.activate([
-            countdownLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -10),
-            countdownLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10),
-        ])
+        if isShowCountdown {
+            countdownLabel.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(countdownLabel)
+            NSLayoutConstraint.activate([
+                countdownLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -10),
+                countdownLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -10),
+            ])
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -122,21 +128,25 @@ public class AVSlidePlayingOverlayView: UIView, AVSlideOverlayView {
 
     public override func layoutSubviews() {
         super.layoutSubviews()
-        var labelFrame = countdownLabel.frame
-        labelFrame.size.width = countdownLabel.intrinsicContentSize.width * 1.2
-        countdownLabel.frame = labelFrame
+        if isShowCountdown {
+            var labelFrame = countdownLabel.frame
+            labelFrame.size.width = countdownLabel.intrinsicContentSize.width * 1.2
+            countdownLabel.frame = labelFrame
+        }
     }
 
     public func playerDidUpdateToTime(_ currentTime: TimeInterval, duration: TimeInterval?) {
-        guard let duration = duration else {
-            countdownLabel.text = nil
-            return
+        if isShowCountdown {
+            guard let duration = duration else {
+                countdownLabel.text = nil
+                return
+            }
+            let secondsRemaining = Int(duration - currentTime)
+            let minutes = String(secondsRemaining / 60)
+            let seconds = String(secondsRemaining % 60)
+            let under10 = secondsRemaining % 60 < 10
+            countdownLabel.text = minutes + (under10 ? ":0" : ":") + seconds
         }
-        let secondsRemaining = Int(duration - currentTime)
-        let minutes = String(secondsRemaining / 60)
-        let seconds = String(secondsRemaining % 60)
-        let under10 = secondsRemaining % 60 < 10
-        countdownLabel.text = minutes + (under10 ? ":0" : ":") + seconds
     }
 
     public func playerDidUpdateStatus(_ status: AVPlayer.TimeControlStatus) {

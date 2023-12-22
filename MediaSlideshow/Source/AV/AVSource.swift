@@ -36,9 +36,10 @@ open class AVSource: NSObject, MediaSource {
 
     open func slide(in slideshow: MediaSlideshow) -> MediaSlideshowSlide {
         let playerController = AVPlayerViewController()
+        player.isMuted = true
         playerController.player = player
-        playerController.player?.isMuted = true
-        playerController.showsPlaybackControls = onAppear == .paused || slideshow.zoomEnabled
+        playerController.showsPlaybackControls = false
+        //playerController.showsPlaybackControls = onAppear == .paused || slideshow.zoomEnabled
         var playView: AVSlidePlayingOverlayView?
         var pauseView: AVSlidePausedOverlayView?
         if !playerController.showsPlaybackControls {
@@ -62,21 +63,26 @@ open class AVSource: NSObject, MediaSource {
     @objc
     open func playerItemDidPlayToEndTime(notification: Notification) {
         player.seek(to: .zero)
+        player.play()
     }
 }
 
 extension AVSource: AVPlayerSlideDelegate {
     public func slideDidAppear(_ slide: AVPlayerSlide) {
-        switch onAppear {
-        case .play:
-            player.play()
+        //switch onAppear {
+//        case .play:
+//            player.isMuted = true
+//            player.play()
+//        case .paused:
+//            player.isMuted = true
+//            player.pause()
+//        }
             player.isMuted = true
-        case .paused:
-            player.pause()
-        }
+            player.play()
     }
 
     public func slideDidDisappear(_ slide: AVPlayerSlide) {
+        player.isMuted = true
         player.pause()
     }
 

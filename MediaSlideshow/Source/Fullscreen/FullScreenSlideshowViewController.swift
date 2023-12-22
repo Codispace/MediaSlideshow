@@ -23,6 +23,8 @@ open class FullScreenSlideshowViewController: UIViewController {
 
     /// Close button 
     open var closeButton = UIButton()
+    
+    public var isHideCloseButtonForVideo = false
 
     /// Close button frame
     open var closeButtonFrame: CGRect?
@@ -133,10 +135,12 @@ open class FullScreenSlideshowViewController: UIViewController {
 }
 extension FullScreenSlideshowViewController: MediaSlideshowDelegate {
     public func mediaSlideshow(_ mediaSlideshow: MediaSlideshow, didChangeCurrentPageTo page: Int) {
-        let isAVSource = sources[page] is AVSource
-        UIView.animate(withDuration: 0.3) {
-            self.slideshow.pageIndicator?.view.alpha = isAVSource ? 0.0 : 1.0
-            self.closeButton.alpha = isAVSource ? 0.0 : 1.0
+        if isHideCloseButtonForVideo {
+            let isAVSource = sources[page] is AVSource
+            UIView.animate(withDuration: 0.3) {
+                self.slideshow.pageIndicator?.view.alpha = isAVSource ? 0.0 : 1.0
+                self.closeButton.alpha = isAVSource ? 0.0 : 1.0
+            }
         }
     }
 }
