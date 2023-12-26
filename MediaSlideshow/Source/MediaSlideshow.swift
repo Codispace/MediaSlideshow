@@ -163,7 +163,7 @@ open class MediaSlideshow: UIView {
         }
     }
     
-    open var circular = true {
+    open var circular = false {
         didSet {
             if sources.count > 0 {
                 setMediaSources(sources)
@@ -329,10 +329,10 @@ open class MediaSlideshow: UIView {
                     scrollViewPage = 0
                 }
         loadMedia(for: scrollViewPage)
-        if !slides.isEmpty {
-            delegate?.mediaSlideshow?(self, didChangeCurrentPageTo: 0)
-            slides[0].didAppear()
-        }
+//        if !slides.isEmpty {
+//            delegate?.mediaSlideshow?(self, didChangeCurrentPageTo: 0)
+//            slides[0].didAppear()
+//        }
     }
 
     private func loadMedia(for scrollViewPage: Int) {
@@ -357,9 +357,9 @@ open class MediaSlideshow: UIView {
      Set image inputs into the image slideshow
      - parameter inputs: Array of InputSource instances.
      */
-    public func setMediaSources(_ sources: [MediaSource]) {
-        self.sources = sources
-        pageIndicator?.numberOfPages = sources.count
+    public func setMediaSources(_ inputs: [MediaSource]) {
+        self.sources = inputs
+        pageIndicator?.numberOfPages = inputs.count
         
         if circular && sources.count > 1 {
                     var scMedias = [MediaSource]()
@@ -372,14 +372,15 @@ open class MediaSlideshow: UIView {
                         scMedias.append(first)
                     }
 
-            self.sources = scMedias
+                    self.sources = scMedias
                 } else {
-                    self.sources = sources
+                    self.sources = inputs
                 }
-        setTimerIfNeeded()
+        
         reloadScrollView()
         layoutScrollView()
         layoutPageControl()
+        setTimerIfNeeded()
     }
     
     fileprivate func setTimerIfNeeded() {
