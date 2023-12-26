@@ -162,6 +162,24 @@ open class MediaSlideshow: UIView {
             scrollView.isUserInteractionEnabled = draggingEnabled
         }
     }
+    
+    open var circular = true {
+        didSet {
+            if sources.count > 0 {
+                setMediaSources(sources)
+            }
+        }
+    }
+    
+    fileprivate var slideshowTimer: Timer?
+    
+    open var slideshowInterval = 0.0 {
+            didSet {
+                slideshowTimer?.invalidate()
+                slideshowTimer = nil
+                setTimerIfNeeded()
+            }
+        }
 
     /// Enables/disables zoom
     open var zoomEnabled = false {
@@ -241,9 +259,14 @@ open class MediaSlideshow: UIView {
         if pageIndicator == nil {
             pageIndicator = UIPageControl()
         }
-
+        setTimerIfNeeded()
         layoutScrollView()
     }
+    
+    open override func removeFromSuperview() {
+            super.removeFromSuperview()
+            pauseTimer()
+        }
 
     open override func layoutSubviews() {
         super.layoutSubviews()
@@ -299,7 +322,12 @@ open class MediaSlideshow: UIView {
             slides.append(slide)
             scrollView.addSubview(slide)
         }
-        scrollViewPage = 0
+        if circular && (sources.count > 1) {
+                    scrollViewPage = 1
+                    scrollView.scrollRectToVisible(CGRect(x: scrollView.frame.size.width, y: 0, width: scrollView.frame.size.width, height: scrollView.frame.size.height), animated: false)
+                } else {
+                    scrollViewPage = 0
+                }
         loadMedia(for: scrollViewPage)
         if !slides.isEmpty {
             delegate?.mediaSlideshow?(self, didChangeCurrentPageTo: 0)
@@ -332,10 +360,74 @@ open class MediaSlideshow: UIView {
     public func setMediaSources(_ sources: [MediaSource]) {
         self.sources = sources
         pageIndicator?.numberOfPages = sources.count
+        
+        if circular && sources.count > 1 {
+                    var scMedias = [MediaSource]()
+
+                    if let last = sources.last {
+                        scMedias.append(last)
+                    }
+                    scMedias += sources
+                    if let first = sources.first {
+                        scMedias.append(first)
+                    }
+
+            self.sources = scMedias
+                } else {
+                    self.sources = sources
+                }
+        setTimerIfNeeded()
         reloadScrollView()
         layoutScrollView()
         layoutPageControl()
     }
+    
+    fileprivate func setTimerIfNeeded() {
+            if slideshowInterval > 0 && sources.count > 1 && slideshowTimer == nil {
+                slideshowTimer = Timer.scheduledTimer(timeInterval: slideshowInterval, target: self, selector: #selector(MediaSlideshow.slideshowTick(_:)), userInfo: nil, repeats: true)
+            }
+        }
+
+        func slideshowTick(_ timer: Timer) {
+            let page = scrollView.frame.size.width > 0 ? Int(scrollView.contentOffset.x / scrollView.frame.size.width) : 0
+            var nextPage = page + 1
+
+            if !circular && page == sources.count - 1 {
+                nextPage = 0
+            }
+
+            setScrollViewPage(nextPage, animated: true)
+        }
+    
+    fileprivate func restartTimer() {
+            if slideshowTimer?.isValid != nil {
+                slideshowTimer?.invalidate()
+                slideshowTimer = nil
+            }
+
+            setTimerIfNeeded()
+        }
+
+        /// Stops slideshow timer
+        open func pauseTimer() {
+            slideshowTimer?.invalidate()
+            slideshowTimer = nil
+        }
+
+        /// Restarts slideshow timer
+        open func unpauseTimer() {
+            setTimerIfNeeded()
+        }
+
+        @available(*, deprecated, message: "use pauseTimer instead")
+        open func pauseTimerIfNeeded() {
+            pauseTimer()
+        }
+
+        @available(*, deprecated, message: "use unpauseTimer instead")
+        open func unpauseTimerIfNeeded() {
+            unpauseTimer()
+        }
 
     // MARK: paging methods
 
@@ -345,7 +437,11 @@ open class MediaSlideshow: UIView {
      - parameter animated: true if animate the change
      */
     open func setCurrentPage(_ newPage: Int, animated: Bool) {
-        setScrollViewPage(newPage, animated: animated)
+        var pageOffset = newPage
+        if circular && (sources.count > 1) {
+                    pageOffset += 1
+                }
+        setScrollViewPage(pageOffset, animated: animated)
     }
 
     /**
@@ -381,7 +477,19 @@ open class MediaSlideshow: UIView {
     }
 
     fileprivate func currentPageForScrollViewPage(_ page: Int) -> Int {
-        page
+        if circular {
+                    if page == 0 {
+                        // first page contains the last image
+                        return Int(sources.count) - 1
+                    } else if page == sources.count - 1 {
+                        // last page contains the first image
+                        return 0
+                    } else {
+                        return page - 1
+                    }
+                } else {
+                    return page
+                }
     }
 
     /**
@@ -389,10 +497,15 @@ open class MediaSlideshow: UIView {
      - Parameter animated: true if animate the change
      */
     open func nextPage(animated: Bool) {
+        if !circular && currentPage == sources.count - 1 {
+            return
+        }
+        
         if isAnimating {
             return
         }
         setCurrentPage(currentPage + 1, animated: animated)
+        restartTimer()
     }
 
     /**
@@ -400,11 +513,15 @@ open class MediaSlideshow: UIView {
      - Parameter animated: true if animate the change
      */
     open func previousPage(animated: Bool) {
+        if !circular && currentPage == 0 {
+            return
+        }
         if isAnimating {
             return
         }
         let newPage = scrollViewPage > 0 ? scrollViewPage - 1 : sources.count - 3
         setScrollViewPage(newPage, animated: animated)
+        restartTimer()
     }
 
     @objc private func pageControlValueChanged() {
@@ -428,6 +545,16 @@ extension MediaSlideshow: UIScrollViewDelegate {
     }
 
     open func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        
+        if circular && (sources.count > 1) {
+            let regularContentOffset = scrollView.frame.size.width * CGFloat(sources.count)
+
+            if scrollView.contentOffset.x >= scrollView.frame.size.width * CGFloat(sources.count + 1) {
+                scrollView.contentOffset = CGPoint(x: scrollView.contentOffset.x - regularContentOffset, y: 0)
+            } else if scrollView.contentOffset.x <= 0 {
+                scrollView.contentOffset = CGPoint(x: scrollView.contentOffset.x + regularContentOffset, y: 0)
+            }
+        }
         // Updates the page indicator as the user scrolls (#204). Not called when not dragging to prevent flickers
         // when interacting with PageControl directly (#376).
         if scrollView.isDragging {

@@ -30,13 +30,14 @@ class ViewController: UIViewController {
 
         slideshow.pageIndicatorPosition = .init(horizontal: .center, vertical: .under)
         slideshow.contentScaleMode = UIViewContentMode.scaleAspectFit
-
+        slideshow.circular = true
+        slideshow.slideshowInterval = 0
         slideshow.pageIndicator = UIPageControl.withSlideshowColors()
 
         // optional way to show activity indicator during image load (skipping the line will show no activity indicator)
         slideshow.activityIndicator = DefaultActivityIndicator()
         slideshow.delegate = self
-
+        
         slideshow.setMediaSources([videoSource] + localSource)
 
         let recognizer = UITapGestureRecognizer(target: self, action: #selector(ViewController.didTap))
