@@ -461,7 +461,7 @@ open class MediaSlideshow: UIView {
     }
 
     fileprivate func setCurrentPageForScrollViewPage(_ page: Int) {
-        if scrollViewPage != page {
+        if scrollViewPage != page || scrollViewPage == 0 {
             if slides.count > scrollViewPage {
                 slides[scrollViewPage].didDisappear()
             }
@@ -478,19 +478,7 @@ open class MediaSlideshow: UIView {
     }
 
     fileprivate func currentPageForScrollViewPage(_ page: Int) -> Int {
-        if circular {
-                    if page == 0 {
-                        // first page contains the last image
-                        return Int(sources.count) - 1
-                    } else if page == sources.count - 1 {
-                        // last page contains the first image
-                        return 0
-                    } else {
-                        return page - 1
-                    }
-                } else {
-                    return page
-                }
+        page
     }
 
     /**

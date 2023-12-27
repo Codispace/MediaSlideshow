@@ -375,8 +375,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				607FACCF1AFB9204008FA782 /* MediaSlideshow_Example */,
 				607FACE41AFB9204008FA782 /* MediaSlideshow_Tests */,
+				607FACCF1AFB9204008FA782 /* MediaSlideshow_Example */,
 				D0E8A9E11D97EB6D007EC517 /* MediaSlideshow_framework */,
 			);
 		};
